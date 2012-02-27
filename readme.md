@@ -1,6 +1,6 @@
 ## Requirements
 
-- Laravel 3.1
+- At least Laravel 3.1
 
 ## Installation
 
