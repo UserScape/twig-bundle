@@ -14,7 +14,7 @@
 
 ## Usage
 
-Simple use the Laravel view class like normal. If your view file extension is **.twig.php**, Twig will be used to parse your view.
+Simply use the Laravel view class like normal. If your view file extension is **.twig.php**, Twig will be used to parse your view.
 
 If you would like to use a different extension, that's fine. Just set the configuration option in your **application/start.php** file:
 
