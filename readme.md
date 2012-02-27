@@ -1,3 +1,7 @@
+## Requirements
+
+- Laravel 3.1
+
 ## Installation
 
 ### Artisan
