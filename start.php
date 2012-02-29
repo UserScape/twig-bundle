@@ -38,19 +38,16 @@ Event::listen('laravel.started: twig', function()
 	Laravel\View::$extensions = array_unique(Laravel\View::$extensions);
 
 	/**
-	 * Create and register the Twig instance in the IoC container
-	 */
-	$loader = new Twig_Loader_Filesystem(array());
-
-	$twig = new Twig_Environment($loader, compact('cache'));
-
-	Laravel\IoC::instance('twig', $twig);
-
-	/**
 	 * Hook into the Laravel view engine
 	 */
-	Laravel\Event::listen(Laravel\View::engine, function($view) use ($twig, $ext)
+	Laravel\Event::listen(Laravel\View::engine, function($view) use ($cache, $ext)
 	{
+		// Create the Twig file-system loader
+		$loader = new Twig_Loader_Filesystem(array());
+
+		// Create a new Twig environment
+		$twig = new Twig_Environment($loader, compact('cache'));
+
 		// Only handle views that have the Twig extension
 		if ( ! str_contains($view->path, $ext)) return false;
 
