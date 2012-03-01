@@ -12,6 +12,14 @@
 
 	'twig' => array('auto' => true),
 
+### Application start file
+
+	Event::listen(View::loader, function($bundle, $view)
+	{
+		$ext = Config::get('twig::config.extension');
+		return Bundle::path($bundle).'views/'.$view.$ext;
+	});
+
 ## Usage
 
 Simply use the Laravel view class like normal. If your view file extension is **.twig.php**, Twig will be used to parse your view.

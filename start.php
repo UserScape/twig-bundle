@@ -14,12 +14,12 @@ Event::listen('laravel.started: twig', function()
 	/**
 	 * Get the path to the Twig compilation directory.
 	 */
-	$cache = path('storage').'cache/twig';
+	$cache = Config::get('twig::config.cache');
 
 	/**
-	 * Make the cache directory if it isn't there
+	 * Make the cache directory if it is enabled and doesn't exist.
 	 */
-	if ( ! is_dir($cache)) mkdir($cache);
+	if ($cache and ! is_dir($cache)) mkdir($cache);
 
 	/**
 	 * Register the Twig library with the auto-loader
@@ -29,6 +29,7 @@ Event::listen('laravel.started: twig', function()
 		'Twig' => Bundle::path('twig').'lib/Twig')
 
 	);
+	include 'Filesystem_loader.php';
 
 	/**
 	 * Register the Twig extension as a valid View extension
@@ -43,7 +44,7 @@ Event::listen('laravel.started: twig', function()
 	Laravel\Event::listen(Laravel\View::engine, function($view) use ($cache, $ext)
 	{
 		// Create the Twig file-system loader
-		$loader = new Twig_Loader_Filesystem(array());
+		$loader = new Filesystem_loader(array());
 
 		// Create a new Twig environment
 		$twig = new Twig_Environment($loader, compact('cache'));
