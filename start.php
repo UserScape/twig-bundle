@@ -17,6 +17,13 @@ Event::listen('laravel.started: twig', function()
 	$cache = Config::get('twig::config.cache');
 
 	/**
+	 * Get various other Twig configuration items
+	 */
+	$debug = Config::get('twig::config.debug');
+
+	$autoescape = Config::get('twig::config.autoescape');
+
+	/**
 	 * Make the cache directory if it is enabled and doesn't exist.
 	 */
 	if ($cache and ! is_dir($cache)) mkdir($cache);
@@ -29,37 +36,63 @@ Event::listen('laravel.started: twig', function()
 		'Twig' => Bundle::path('twig').'lib/Twig')
 
 	);
-	include 'Filesystem_loader.php';
 
 	/**
-	 * Register the Twig extension as a valid View extension
+	 * Instantiate a new Laravel Twig loader
 	 */
-	Laravel\View::$extensions[] = $ext;
+	include 'loader.php';
 
-	Laravel\View::$extensions = array_unique(Laravel\View::$extensions);
+	/**
+	 * If it's registered in the IoC, resolve from there... otherwise use default
+	 */
+	if (IoC::registered('twig::loader'))
+	{
+		$loader = IoC::resolve('twig::loader');
+	}
+	else
+	{
+		$loader = new Laravel_Twig_Loader($ext);
+	}
+
+	/**
+	 * Hook into the Laravel view loader
+	 */
+	Laravel\Event::override(Laravel\View::loader, function($bundle, $view) use ($loader, $ext)
+	{
+		// Use the custom Laravel Twig loader for Twig views...
+		if (starts_with($view, 'twig|'))
+		{
+			return $loader->getPath($bundle, substr($view, 5));
+		}
+		elseif (starts_with($bundle, 'twig|'))
+		{
+			return $loader->getPath(substr($bundle, 5), $view);
+		}
+		// Otherwise use the default Laravel loading conventions...
+		else
+		{
+			return View::file($bundle, $view);
+		}
+	});
 
 	/**
 	 * Hook into the Laravel view engine
 	 */
-	Laravel\Event::listen(Laravel\View::engine, function($view) use ($cache, $ext)
+	Laravel\Event::listen(Laravel\View::engine, function($view) use ($loader, $cache, $ext, $debug, $autoescape)
 	{
-		// Create the Twig file-system loader
-		$loader = new Filesystem_loader(array());
+		// Only handle views that have the Twig marker
+		if ( ! starts_with($view->view, 'twig|')) return false;
 
-		// Create a new Twig environment
-		$twig = new Twig_Environment($loader, compact('cache'));
+		// Load the Laravel Twig extensions
+		require_once 'extensions/HTML.php';
 
-		// Only handle views that have the Twig extension
-		if ( ! str_contains($view->path, $ext)) return false;
+		$twig = new Twig_Environment($loader, compact('cache', 'debug', 'autoescape'));
 
-		// Set the loader path to the correct path for the view
-		$twig->getLoader()->setPaths(array(dirname($view->path)));
-
-		// Give one last chance to tweak the twig and view instance
-		Laravel\Event::fire('twig::rendering', array($twig, $view));
+		// Register the Laravel Twig extensions
+		$twig->addExtension(new Laravel_Twig_Extension);
 
 		// Render back the template contents
-		return $twig->render(basename($view->path), $view->data());
+		return $twig->render(substr($view->view, 5), $view->data());
 	});
 
 });
