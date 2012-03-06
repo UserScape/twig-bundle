@@ -12,36 +12,27 @@
 
 	'twig' => array('auto' => true),
 
-### Application start file
-
-	Event::listen(View::loader, function($bundle, $view)
-	{
-		$ext = Config::get('twig::config.extension');
-		return Bundle::path($bundle).'views/'.$view.$ext;
-	});
-
 ## Usage
 
-Simply use the Laravel view class like normal. If your view file extension is **.twig.php**, Twig will be used to parse your view.
-
-If you would like to use a different extension, that's fine. Just set the configuration option in your **application/start.php** file:
-
-**Specifying the Twig template extension:**
+**Specifying the Twig template extension in application/start.php:**
 
 	Event::listen('laravel.started: twig', function()
 	{
-		Config::set('twig::config.extension', '.html');
+		Config::set('twig::config.extension', '.twig.html');
 	});
 
-## Events
+**Rendering a Twig template from a controller / route:**
 
-Before rendering the content of a template, the bundle raises a **twig::rendering** event, passing in the Twig_Environment instance and the View being rendered.
+	return View::make('twig|home.index');
 
-**Catching the twig::rendering event:**
+Notice the **twig|** prefix. This indicates to the view class that the Twig engine should be used.
 
-	Event::listen('twig::rendering', array($twig, $view)
-	{
-		// Do stuff here...
-	});
+When including templates from within Twig, you can simple use the Laravel "dot" syntax to include the templates. **Do not use the typical Twig path syntax**.
 
-> **Note:** You do not need to return anything from the rendering event. It is just a place to do any last minute work on the Twig or View instance.
+**Rendering a Twig template from within a template:**
+
+	{% include 'partials.sidebar' %}
+
+**Rendering a bundle Twig template from within a template:**
+
+	{% include 'bundle::home.index' %}
