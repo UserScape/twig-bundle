@@ -71,7 +71,7 @@ Event::listen('laravel.started: twig', function()
 		// Otherwise use the default Laravel loading conventions...
 		else
 		{
-			return View::file($bundle, $view);
+			return View::file($bundle, $view, Bundle::path($bundle).'views');
 		}
 	});
 
